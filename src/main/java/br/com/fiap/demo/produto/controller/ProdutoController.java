@@ -1,9 +1,13 @@
 package br.com.fiap.demo.produto.controller;
 
+import br.com.fiap.demo.dto.ProdutoDTO;
 import br.com.fiap.demo.produto.entity.Produto;
 import br.com.fiap.demo.produto.service.ProdutoService;
+import jakarta.validation.Valid;
 import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -19,8 +23,12 @@ public class ProdutoController
 {
     @Autowired
     private ProdutoService produtoService;
-    public ResponseEntity<Collection<Produto>> findAll(){
-        var produtos = produtoService.findAll();
+    public ResponseEntity<Page<ProdutoDTO>> findAll(
+            @RequestParam(value="pagina", defaultValue = "0") Integer pagina,
+            @RequestParam(value="tamanho", defaultValue = "10") Integer tamanho
+    ){
+        PageRequest pageRequest = PageRequest.of(pagina, tamanho);
+        var produtos = produtoService.findAll(pageRequest);
         return ResponseEntity.ok(produtos);
     }
 
@@ -30,7 +38,7 @@ public class ProdutoController
         return ResponseEntity.ok(produto);
     }
     @PostMapping
-    public ResponseEntity<Produto> save(@RequestBody Produto produto){
+    public ResponseEntity<ProdutoDTO> save(@Valid @RequestBody ProdutoDTO produto){
         var produtoSaved = produtoService.save(produto);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(produtoSaved.getId()).toUri();
@@ -39,7 +47,7 @@ public class ProdutoController
 
     @PutMapping("/{id}")
 
-    public ResponseEntity<Produto> update(@RequestBody Produto produto, @PathVariable UUID id){
+    public ResponseEntity<ProdutoDTO> update(@Valid @RequestBody ProdutoDTO produto, @PathVariable UUID id){
         var produtoAtualizado = produtoService.update(id, produto);
         return ResponseEntity.ok(produtoAtualizado);
     }
